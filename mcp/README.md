@@ -1,11 +1,10 @@
 # Fastapi MCP Agents
 
-A FastAPI-based agent system that integrates the Module Context Protocol (MCP) for enhanced context sharing between agents. This project features intelligent agents with advanced DSPy functionality for dynamic, context-aware responses.
+A FastAPI-based agent system that integrates the Model Context Protocol (MCP) for enhanced context sharing between agents. This project features intelligent agents with advanced DSPy functionality for dynamic, context-aware responses.
 
-```markdown
 # Fastapi MCP Agents
 
-A FastAPI-based agent system that implements the Module Context Protocol (MCP) for context sharing and state management between agents. This project showcases multi-step reasoning, workflow coordination, and decisioning capabilities through a set of specialized MCP agents.
+A FastAPI-based agent system that implements the Model Context Protocol (MCP) for context sharing and state management between agents. This project showcases multi-step reasoning, workflow coordination, and decisioning capabilities through a set of specialized MCP agents.
 
 ---
 
