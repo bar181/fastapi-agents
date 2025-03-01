@@ -25,7 +25,7 @@ Each agent will be developed as a separate module within the `agents/` folder. T
 
 ## Implementation Guidelines from Gemini Integration
 
-Based on our successful Gemini integration, we'll follow these guidelines for all LLM agents:
+Based on our successful Gemini integration and provider-based endpoints, we'll follow these guidelines for all LLM agents:
 
 1. **Default to Gemini**: Use Gemini as the default LLM provider, with OpenAI as an alternative option.
 2. **Common Parameters**: All agents should support these parameters:
@@ -36,6 +36,7 @@ Based on our successful Gemini integration, we'll follow these guidelines for al
 4. **Error Handling**: Implement robust error handling for API failures
 5. **Response Format**: Maintain consistent response format across all agents
 6. **Token Usage**: Include token usage statistics in responses (estimated for Gemini)
+7. **Provider Validation**: Validate provider against a list of available providers
 
 ---
 
@@ -55,8 +56,13 @@ Based on our successful Gemini integration, we'll follow these guidelines for al
   from agents.openai_agent import OpenAIAgent
 
   class QuestionAnsweringAgent:
+      AVAILABLE_PROVIDERS = ["gemini", "openai"]
+      
       def __init__(self, provider="gemini"):
           self.provider = provider.lower()
+          if self.provider not in self.AVAILABLE_PROVIDERS:
+              raise ValueError(f"Invalid provider: {provider}. Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}")
+              
           if self.provider == "openai":
               self.agent = OpenAIAgent()
           else:
@@ -109,8 +115,13 @@ Based on our successful Gemini integration, we'll follow these guidelines for al
   from agents.openai_agent import OpenAIAgent
 
   class ChatbotAgent:
+      AVAILABLE_PROVIDERS = ["gemini", "openai"]
+      
       def __init__(self, provider="gemini"):
           self.provider = provider.lower()
+          if self.provider not in self.AVAILABLE_PROVIDERS:
+              raise ValueError(f"Invalid provider: {provider}. Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}")
+              
           if self.provider == "openai":
               self.agent = OpenAIAgent()
           else:
@@ -182,8 +193,13 @@ Based on our successful Gemini integration, we'll follow these guidelines for al
   from agents.openai_agent import OpenAIAgent
 
   class ResearchAgent:
+      AVAILABLE_PROVIDERS = ["gemini", "openai"]
+      
       def __init__(self, provider="gemini"):
           self.provider = provider.lower()
+          if self.provider not in self.AVAILABLE_PROVIDERS:
+              raise ValueError(f"Invalid provider: {provider}. Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}")
+              
           if self.provider == "openai":
               self.agent = OpenAIAgent()
           else:
@@ -258,8 +274,13 @@ Based on our successful Gemini integration, we'll follow these guidelines for al
   from agents.openai_agent import OpenAIAgent
 
   class LLMClassifierAgent:
+      AVAILABLE_PROVIDERS = ["gemini", "openai"]
+      
       def __init__(self, provider="gemini"):
           self.provider = provider.lower()
+          if self.provider not in self.AVAILABLE_PROVIDERS:
+              raise ValueError(f"Invalid provider: {provider}. Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}")
+              
           if self.provider == "openai":
               self.agent = OpenAIAgent()
           else:
@@ -338,8 +359,13 @@ Based on our successful Gemini integration, we'll follow these guidelines for al
   from agents.openai_agent import OpenAIAgent
 
   class ResearchAnalyzerAgent:
+      AVAILABLE_PROVIDERS = ["gemini", "openai"]
+      
       def __init__(self, provider="gemini"):
           self.provider = provider.lower()
+          if self.provider not in self.AVAILABLE_PROVIDERS:
+              raise ValueError(f"Invalid provider: {provider}. Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}")
+              
           if self.provider == "openai":
               self.agent = OpenAIAgent()
           else:

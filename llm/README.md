@@ -35,7 +35,7 @@ This module integrates Large Language Model (LLM) capabilities into the FastAPI 
 
 - **OpenAI Agent**: This agent connects to OpenAI's API to process text inputs and generate responses. It supports various models and can be configured for different tasks.
 - **Gemini Agent**: This agent integrates with Gemini's API for language processing tasks. It provides similar capabilities to the OpenAI agent but uses Gemini's models.
-- **Dynamic LLM Selection**: This feature allows you to choose between OpenAI and Gemini at runtime, defaulting to Gemini if no provider is specified.
+- **Dynamic Provider Selection**: This feature allows you to choose between OpenAI and Gemini at runtime, defaulting to Gemini if no provider is specified.
 
 ### Available LLM Agents
 
@@ -43,7 +43,8 @@ This module integrates Large Language Model (LLM) capabilities into the FastAPI 
 2. **OpenAI Prompt Agent** (`openai_prompt.py`): Advanced prompt endpoint for OpenAI with parameter customization
 3. **Gemini Hello Agent** (`gemini_hello.py`): Simple test endpoint for Gemini integration
 4. **Gemini Prompt Agent** (`gemini_prompt.py`): Advanced prompt endpoint for Gemini with parameter customization
-5. **Agent Hello** (`agent_hello.py`): Dynamic provider selection endpoint that can use either OpenAI or Gemini
+5. **Provider Hello Agent** (`provider_hello.py`): Dynamic provider selection endpoint for simple testing
+6. **Provider Prompt Agent** (`provider_prompt.py`): Dynamic provider selection endpoint with advanced parameter customization
 
 ---
 
@@ -67,7 +68,8 @@ llm/
 │   ├─ gemini_agent.py  # Gemini core implementation
 │   ├─ gemini_hello.py  # Gemini hello endpoint
 │   ├─ gemini_prompt.py # Gemini prompt endpoint
-│   ├─ agent_hello.py   # Dynamic provider selection
+│   ├─ provider_hello.py # Provider selection hello endpoint
+│   ├─ provider_prompt.py # Provider selection prompt endpoint
 │   ├─ dspy_integration.py # DSPy integration utilities
 ├─ docs/                # Documentation for this module
 ├─ plans/               # Step by step instructions for AI code writing
@@ -122,7 +124,8 @@ LLM Agent Endpoints:
 - OpenAI Prompt: POST /llm/openai-prompt
 - Gemini Hello World: GET /llm/gemini-hello?INPUT_TEXT=Hello%20World
 - Gemini Prompt: POST /llm/gemini-prompt
-- Dynamic LLM Selection: GET /llm/agent-hello?INPUT_TEXT=Hello%20World&provider=openai
+- Provider Hello: GET /llm/provider-hello?INPUT_TEXT=Hello%20World&provider=openai
+- Provider Prompt: POST /llm/provider-prompt
 
 Agent Categories in Swagger UI:
 - **LLM Agents**: Advanced language processing agents
@@ -130,7 +133,8 @@ Agent Categories in Swagger UI:
   - OpenAI Prompt: POST /llm/openai-prompt
   - Gemini Hello: GET /llm/gemini-hello?INPUT_TEXT=Hello%20World
   - Gemini Prompt: POST /llm/gemini-prompt
-  - Agent Hello: GET /llm/agent-hello?INPUT_TEXT=Hello%20World&provider=openai
+  - Provider Hello: GET /llm/provider-hello?INPUT_TEXT=Hello%20World&provider=openai
+  - Provider Prompt: POST /llm/provider-prompt
 
 - **Simple Agents**: Basic agents without validation
   - Hello World: GET /agent/hello_world
@@ -148,14 +152,15 @@ Example Usage:
 # Test an endpoint (replace SERVER_URL with your server address)
 curl SERVER_URL/llm/openai-hello?INPUT_TEXT=Hello%20World
 
-# Test with parameters
-curl "SERVER_URL/llm/agent-hello?INPUT_TEXT=Tell%20me%20a%20joke&provider=openai"
+# Test with provider selection
+curl "SERVER_URL/llm/provider-hello?INPUT_TEXT=Tell%20me%20a%20joke&provider=openai"
 
 # Test POST endpoint with JSON body
-curl -X POST "SERVER_URL/llm/gemini-prompt" \
+curl -X POST "SERVER_URL/llm/provider-prompt" \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "Tell me a dad joke",
+    "provider": "gemini",
     "system_message": "You are a comedian who specializes in dad jokes.",
     "max_tokens": 100,
     "temperature": 0.7
