@@ -40,6 +40,37 @@ def register_routes(router: APIRouter):
         """
         Test endpoint for OpenAI integration.
         Returns a simple response from OpenAI's API.
+
+        **Input:**
+
+        * **INPUT_TEXT (optional, string):** The text to send to OpenAI. Example: Hello World
+
+        **Process:** An instance of the `OpenAIAgent` is used. The `test_connection` 
+        method is called with the `INPUT_TEXT`.
+
+        **Example Input (query parameter):**
+
+        `?INPUT_TEXT=Hello World`
+
+        **Example Output:**
+
+        ```json
+        {
+          "status": "success",
+          "message": "Hello! How can I assist you today?",
+          "model": "gpt-4o-mini"
+        }
+        ```
+
+        **Example Output (if API key is not configured):**
+
+        ```json
+        {
+          "status": "error",
+          "message": "OpenAI API key not configured",
+          "model": "none"
+        }
+        ```
         """
         result = agent.test_connection(INPUT_TEXT)
         return result
@@ -49,11 +80,52 @@ def register_routes(router: APIRouter):
         """
         Send a prompt to OpenAI with additional parameters.
         
-        - **prompt**: The text prompt to send to OpenAI
-        - **system_message**: (optional) System message to set context
-        - **max_tokens**: (optional) Maximum tokens to generate
-        - **temperature**: (optional) Sampling temperature
-        - **model**: (optional) Model to use, defaults to the model in .env or gpt-4o-mini
+        **Input:**
+
+        * **prompt (required, string):** The text prompt to send to OpenAI
+        * **system_message (optional, string):** System message to set context
+        * **max_tokens (optional, integer):** Maximum tokens to generate
+        * **temperature (optional, float):** Sampling temperature
+        * **model (optional, string):** Model to use, defaults to the model in .env or gpt-4o-mini
+
+        **Process:** An instance of the `OpenAIAgent` is used. The `process_prompt` 
+        method is called with the request parameters.
+
+        **Example Input (JSON body):**
+
+        ```json
+        {
+          "prompt": "Explain quantum computing in simple terms",
+          "system_message": "You are a science educator for children.",
+          "max_tokens": 150,
+          "temperature": 0.7
+        }
+        ```
+
+        **Example Output:**
+
+        ```json
+        {
+          "status": "success",
+          "message": "Quantum computing is like having a super-fast calculator that can try many answers at once...",
+          "model": "gpt-4o-mini",
+          "usage": {
+            "prompt_tokens": 25,
+            "completion_tokens": 120,
+            "total_tokens": 145
+          }
+        }
+        ```
+
+        **Example Output (if API key is not configured):**
+
+        ```json
+        {
+          "status": "error",
+          "message": "OpenAI API key not configured",
+          "model": "none"
+        }
+        ```
         """
         result = agent.process_prompt(request.model_dump())
         return result

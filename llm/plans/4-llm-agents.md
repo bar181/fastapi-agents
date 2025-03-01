@@ -1,7 +1,3 @@
-Below is the proposed **/plans/4-llm-agents.md** document outlining the implementation of five LLM agents. This plan details each agent's objective, functionality, and pseudocode. Inline comments guide users on how to call the agents directly, and progress should be logged in the **/logs/4-llm-agents-logs.md** file.
-
----
-
 # Plan for LLM Agents Implementation
 
 ## Objective
@@ -23,7 +19,23 @@ The five agents to be implemented are:
 
 ## Overview
 
-Each agent will be developed as a separate module within the `agents/` folder. The agents use LLM calls (e.g., via OpenAI) and, for the dspy-enabled ones, combine rule-based processing with LLM refinement. Detailed pseudocode is provided to illustrate the intended functionality.
+Each agent will be developed as a separate module within the `agents/` folder. The agents will use the Gemini LLM by default, with the option to switch to OpenAI. For the dspy-enabled ones, they will combine rule-based processing with LLM refinement. Detailed pseudocode is provided to illustrate the intended functionality.
+
+---
+
+## Implementation Guidelines from Gemini Integration
+
+Based on our successful Gemini integration, we'll follow these guidelines for all LLM agents:
+
+1. **Default to Gemini**: Use Gemini as the default LLM provider, with OpenAI as an alternative option.
+2. **Common Parameters**: All agents should support these parameters:
+   - `system_message`: (optional) System message to set context
+   - `max_tokens`: (optional) Maximum tokens to generate
+   - `temperature`: (optional) Sampling temperature
+3. **Provider Selection**: Include a `provider` parameter to switch between "gemini" and "openai"
+4. **Error Handling**: Implement robust error handling for API failures
+5. **Response Format**: Maintain consistent response format across all agents
+6. **Token Usage**: Include token usage statistics in responses (estimated for Gemini)
 
 ---
 
@@ -33,40 +45,53 @@ Each agent will be developed as a separate module within the `agents/` folder. T
 
 - **Functionality:**
   - Receives a question as input.
-  - Sends the question to an LLM provider.
+  - Sends the question to the selected LLM provider.
   - Returns the generated answer.
 
 - **Pseudocode:**
   ```python
   # agents/question_answering.py
-  import openai
-  from os import getenv
+  from agents.gemini_agent import GeminiAgent
+  from agents.openai_agent import OpenAIAgent
 
   class QuestionAnsweringAgent:
-      def __init__(self):
-          openai.api_key = getenv("OPENAI_API_KEY")
+      def __init__(self, provider="gemini"):
+          self.provider = provider.lower()
+          if self.provider == "openai":
+              self.agent = OpenAIAgent()
+          else:
+              self.agent = GeminiAgent()
 
-      def get_answer(self, question: str) -> dict:
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=f"Answer the following question:\n{question}",
-              max_tokens=150
-          )
-          return {"answer": response.choices[0].text.strip()}
+      def get_answer(self, question: str, system_message: str = "You are a helpful assistant.", 
+                    max_tokens: int = 150, temperature: float = 0.7) -> dict:
+          prompt_data = {
+              "prompt": question,
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          return self.agent.process_prompt(prompt_data)
 
-  def agent_main(question: str):
+  def agent_main(question: str, provider: str = "gemini", system_message: str = "You are a helpful assistant.", 
+                max_tokens: int = 150, temperature: float = 0.7):
       """
       Direct call instructions:
       1. Import the agent and set your question.
-      2. Call agent_main() with the question string.
+      2. Call agent_main() with the question string and optional parameters.
       
       Example:
           >>> from agents import question_answering
-          >>> result = question_answering.agent_main("What is the capital of France?")
-          >>> print(result)  # Expected output: {'answer': 'Paris'}
+          >>> result = question_answering.agent_main(
+          ...     "What is the capital of France?",
+          ...     provider="gemini",  # or "openai"
+          ...     system_message="You are a geography expert.",
+          ...     max_tokens=100,
+          ...     temperature=0.5
+          ... )
+          >>> print(result)
       """
-      agent = QuestionAnsweringAgent()
-      return agent.get_answer(question)
+      agent = QuestionAnsweringAgent(provider)
+      return agent.get_answer(question, system_message, max_tokens, temperature)
   ```
 
 ---
@@ -80,32 +105,41 @@ Each agent will be developed as a separate module within the `agents/` folder. T
 - **Pseudocode:**
   ```python
   # agents/chatbot.py
-  import openai
-  from os import getenv
+  from agents.gemini_agent import GeminiAgent
+  from agents.openai_agent import OpenAIAgent
 
   class ChatbotAgent:
-      def __init__(self):
-          openai.api_key = getenv("OPENAI_API_KEY")
+      def __init__(self, provider="gemini"):
+          self.provider = provider.lower()
+          if self.provider == "openai":
+              self.agent = OpenAIAgent()
+          else:
+              self.agent = GeminiAgent()
 
-      def ask_clarification(self, initial_input: str) -> str:
-          prompt = f"Ask a clarifying question for the following input:\n{initial_input}"
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=prompt,
-              max_tokens=50
-          )
-          return response.choices[0].text.strip()
+      def ask_clarification(self, initial_input: str, system_message: str = "You are a helpful assistant.", 
+                           max_tokens: int = 50, temperature: float = 0.7) -> str:
+          prompt_data = {
+              "prompt": f"Ask a clarifying question for the following input:\n{initial_input}",
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          response = self.agent.process_prompt(prompt_data)
+          return response["message"] if response["status"] == "success" else "Could not generate clarification."
 
-      def generate_response(self, context: str) -> str:
-          prompt = f"Using the following context, provide a helpful answer:\n{context}"
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=prompt,
-              max_tokens=150
-          )
-          return response.choices[0].text.strip()
+      def generate_response(self, context: str, system_message: str = "You are a helpful assistant.", 
+                           max_tokens: int = 150, temperature: float = 0.7) -> str:
+          prompt_data = {
+              "prompt": f"Using the following context, provide a helpful answer:\n{context}",
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          response = self.agent.process_prompt(prompt_data)
+          return response["message"] if response["status"] == "success" else "Could not generate response."
 
-  def agent_main(user_input: str):
+  def agent_main(user_input: str, provider: str = "gemini", system_message: str = "You are a helpful assistant.", 
+                max_tokens: int = 150, temperature: float = 0.7):
       """
       Direct call instructions:
       1. Import the chatbot agent and provide an initial input.
@@ -114,14 +148,20 @@ Each agent will be developed as a separate module within the `agents/` folder. T
       
       Example:
           >>> from agents import chatbot
-          >>> result = chatbot.agent_main("I need help with my account")
+          >>> result = chatbot.agent_main(
+          ...     "I need help with my account",
+          ...     provider="gemini",  # or "openai"
+          ...     system_message="You are a customer service representative.",
+          ...     max_tokens=150,
+          ...     temperature=0.7
+          ... )
           >>> print(result)
       """
-      agent = ChatbotAgent()
-      clarification = agent.ask_clarification(user_input)
+      agent = ChatbotAgent(provider)
+      clarification = agent.ask_clarification(user_input, system_message, 50, temperature)
       # For demonstration, combine the initial input with the generated clarification.
       combined_context = f"{user_input}\nClarification: {clarification}"
-      answer = agent.generate_response(combined_context)
+      answer = agent.generate_response(combined_context, system_message, max_tokens, temperature)
       return {"clarification": clarification, "final_answer": answer}
   ```
 
@@ -138,36 +178,47 @@ Each agent will be developed as a separate module within the `agents/` folder. T
 - **Pseudocode:**
   ```python
   # agents/research_agent.py
-  import openai
-  from os import getenv
+  from agents.gemini_agent import GeminiAgent
+  from agents.openai_agent import OpenAIAgent
 
   class ResearchAgent:
-      def __init__(self):
-          openai.api_key = getenv("OPENAI_API_KEY")
+      def __init__(self, provider="gemini"):
+          self.provider = provider.lower()
+          if self.provider == "openai":
+              self.agent = OpenAIAgent()
+          else:
+              self.agent = GeminiAgent()
 
-      def extract_topics(self, query: str) -> list:
-          prompt = f"Extract key topics from the research query:\n{query}"
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=prompt,
-              max_tokens=60
-          )
-          topics = response.choices[0].text.strip().split(',')
-          return [topic.strip() for topic in topics if topic.strip()]
+      def extract_topics(self, query: str, system_message: str = "You are a research assistant.", 
+                        max_tokens: int = 60, temperature: float = 0.7) -> list:
+          prompt_data = {
+              "prompt": f"Extract key topics from the research query:\n{query}",
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          response = self.agent.process_prompt(prompt_data)
+          if response["status"] == "success":
+              topics = response["message"].strip().split(',')
+              return [topic.strip() for topic in topics if topic.strip()]
+          return ["No topics extracted"]
 
-      def analyze_topic(self, topic: str) -> str:
-          prompt = f"Provide a detailed analysis on the following topic:\n{topic}"
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=prompt,
-              max_tokens=150
-          )
-          return response.choices[0].text.strip()
+      def analyze_topic(self, topic: str, system_message: str = "You are a research analyst.", 
+                       max_tokens: int = 150, temperature: float = 0.7) -> str:
+          prompt_data = {
+              "prompt": f"Provide a detailed analysis on the following topic:\n{topic}",
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          response = self.agent.process_prompt(prompt_data)
+          return response["message"] if response["status"] == "success" else f"Could not analyze topic: {topic}"
 
       def aggregate_results(self, analyses: list) -> str:
           return "\n\n".join(analyses)
 
-  def agent_main(query: str):
+  def agent_main(query: str, provider: str = "gemini", system_message: str = "You are a research assistant.", 
+                max_tokens: int = 150, temperature: float = 0.7):
       """
       Direct call instructions:
       1. Import the research agent.
@@ -175,12 +226,18 @@ Each agent will be developed as a separate module within the `agents/` folder. T
       
       Example:
           >>> from agents import research_agent
-          >>> result = research_agent.agent_main("Impact of climate change on agriculture")
+          >>> result = research_agent.agent_main(
+          ...     "Impact of climate change on agriculture",
+          ...     provider="gemini",  # or "openai"
+          ...     system_message="You are a climate science expert.",
+          ...     max_tokens=200,
+          ...     temperature=0.7
+          ... )
           >>> print(result)
       """
-      agent = ResearchAgent()
-      topics = agent.extract_topics(query)
-      analyses = [agent.analyze_topic(topic) for topic in topics]
+      agent = ResearchAgent(provider)
+      topics = agent.extract_topics(query, system_message, 60, temperature)
+      analyses = [agent.analyze_topic(topic, system_message, max_tokens, temperature) for topic in topics]
       summary = agent.aggregate_results(analyses)
       return {"topics": topics, "analysis_summary": summary}
   ```
@@ -197,12 +254,16 @@ Each agent will be developed as a separate module within the `agents/` folder. T
   ```python
   # agents/llm_classifier.py
   import re
-  import openai
-  from os import getenv
+  from agents.gemini_agent import GeminiAgent
+  from agents.openai_agent import OpenAIAgent
 
   class LLMClassifierAgent:
-      def __init__(self):
-          openai.api_key = getenv("OPENAI_API_KEY")
+      def __init__(self, provider="gemini"):
+          self.provider = provider.lower()
+          if self.provider == "openai":
+              self.agent = OpenAIAgent()
+          else:
+              self.agent = GeminiAgent()
           self.rules = {
               "Greeting": [r"\bhello\b", r"\bhi\b"],
               "Question": [r"\?$", r"\bwhat\b", r"\bhow\b"],
@@ -218,19 +279,24 @@ Each agent will be developed as a separate module within the `agents/` folder. T
           # Return the category with the highest score
           return max(scores, key=scores.get)
 
-      def refine_classification(self, text: str, initial_classification: str) -> str:
+      def refine_classification(self, text: str, initial_classification: str, 
+                               system_message: str = "You are a text classification expert.", 
+                               max_tokens: int = 100, temperature: float = 0.7) -> str:
           prompt = (
               f"Given the input text: '{text}' and an initial classification of "
               f"'{initial_classification}', provide a refined classification with reasoning."
           )
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=prompt,
-              max_tokens=100
-          )
-          return response.choices[0].text.strip()
+          prompt_data = {
+              "prompt": prompt,
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          response = self.agent.process_prompt(prompt_data)
+          return response["message"] if response["status"] == "success" else "Could not refine classification."
 
-  def agent_main(text: str):
+  def agent_main(text: str, provider: str = "gemini", system_message: str = "You are a text classification expert.", 
+                max_tokens: int = 100, temperature: float = 0.7):
       """
       Direct call instructions:
       1. Import the LLM classifier agent.
@@ -238,12 +304,18 @@ Each agent will be developed as a separate module within the `agents/` folder. T
       
       Example:
           >>> from agents import llm_classifier
-          >>> result = llm_classifier.agent_main("Hi, can you help me?")
+          >>> result = llm_classifier.agent_main(
+          ...     "Hi, can you help me?",
+          ...     provider="gemini",  # or "openai"
+          ...     system_message="You are a text classification expert.",
+          ...     max_tokens=100,
+          ...     temperature=0.7
+          ... )
           >>> print(result)
       """
-      agent = LLMClassifierAgent()
+      agent = LLMClassifierAgent(provider)
       initial_class = agent.rule_based_classify(text)
-      refined = agent.refine_classification(text, initial_class)
+      refined = agent.refine_classification(text, initial_class, system_message, max_tokens, temperature)
       return {"initial_classification": initial_class, "refined_classification": refined}
   ```
 - **Notes:**  
@@ -262,12 +334,16 @@ Each agent will be developed as a separate module within the `agents/` folder. T
   ```python
   # agents/research_analyzer.py
   import re
-  import openai
-  from os import getenv
+  from agents.gemini_agent import GeminiAgent
+  from agents.openai_agent import OpenAIAgent
 
   class ResearchAnalyzerAgent:
-      def __init__(self):
-          openai.api_key = getenv("OPENAI_API_KEY")
+      def __init__(self, provider="gemini"):
+          self.provider = provider.lower()
+          if self.provider == "openai":
+              self.agent = OpenAIAgent()
+          else:
+              self.agent = GeminiAgent()
           # dspy-inspired patterns for extraction
           self.patterns = {
               "Key Points": [r"\bimportant\b", r"\bnotable\b"],
@@ -282,23 +358,27 @@ Each agent will be developed as a separate module within the `agents/` folder. T
                       extracted[key].append(pattern)
           return extracted
 
-      def analyze_element(self, element: str) -> str:
-          prompt = f"Provide an in-depth analysis of the element: {element}"
-          response = openai.Completion.create(
-              engine="text-davinci-003",
-              prompt=prompt,
-              max_tokens=120
-          )
-          return response.choices[0].text.strip()
+      def analyze_element(self, element: str, system_message: str = "You are a research analyst.", 
+                         max_tokens: int = 120, temperature: float = 0.7) -> str:
+          prompt_data = {
+              "prompt": f"Provide an in-depth analysis of the element: {element}",
+              "system_message": system_message,
+              "max_tokens": max_tokens,
+              "temperature": temperature
+          }
+          response = self.agent.process_prompt(prompt_data)
+          return response["message"] if response["status"] == "success" else f"Could not analyze element: {element}"
 
-      def multi_step_analysis(self, text: str) -> dict:
+      def multi_step_analysis(self, text: str, system_message: str = "You are a research analyst.", 
+                             max_tokens: int = 120, temperature: float = 0.7) -> dict:
           elements = self.extract_elements(text)
           analysis = {}
           for category, elems in elements.items():
-              analysis[category] = [self.analyze_element(elem) for elem in elems]
+              analysis[category] = [self.analyze_element(elem, system_message, max_tokens, temperature) for elem in elems]
           return analysis
 
-  def agent_main(text: str):
+  def agent_main(text: str, provider: str = "gemini", system_message: str = "You are a research analyst.", 
+                max_tokens: int = 120, temperature: float = 0.7):
       """
       Direct call instructions:
       1. Import the research analyzer agent.
@@ -306,11 +386,17 @@ Each agent will be developed as a separate module within the `agents/` folder. T
       
       Example:
           >>> from agents import research_analyzer
-          >>> result = research_analyzer.agent_main("Discuss the important factors and why they matter in climate change")
+          >>> result = research_analyzer.agent_main(
+          ...     "Discuss the important factors and why they matter in climate change",
+          ...     provider="gemini",  # or "openai"
+          ...     system_message="You are a climate science expert.",
+          ...     max_tokens=150,
+          ...     temperature=0.7
+          ... )
           >>> print(result)
       """
-      agent = ResearchAnalyzerAgent()
-      analysis = agent.multi_step_analysis(text)
+      agent = ResearchAnalyzerAgent(provider)
+      analysis = agent.multi_step_analysis(text, system_message, max_tokens, temperature)
       return {"analysis": analysis}
   ```
 - **Notes:**  
@@ -328,6 +414,8 @@ Each agent will be developed as a separate module within the `agents/` folder. T
     - Correct functionality for each agent.
     - Multi-step process outcomes.
     - dspy enhancements in agents 4 and 5.
+    - Provider switching between Gemini and OpenAI.
+    - Parameter handling for system_message, max_tokens, and temperature.
   
 - **Logging:**  
   Document progress, test results, and any issues in **/logs/4-llm-agents-logs.md**.
@@ -344,8 +432,4 @@ This plan outlines the implementation of five LLM agents:
 4. **LLM-Enhanced Classifier Agent (dspy)** – Combines rule-based classification with LLM refinement.
 5. **Multi-Step Research Analyzer Agent (dspy)** – Extracts key elements using dspy patterns and provides comprehensive analyses.
 
-Each agent includes detailed pseudocode and inline instructions to facilitate easy integration, testing, and future enhancements.
-
---- 
-
-Please review this document and let me know if any additional details or modifications are required.
+Each agent includes detailed pseudocode and inline instructions to facilitate easy integration, testing, and future enhancements. All agents will use Gemini as the default LLM provider with the option to switch to OpenAI, and will support common parameters for system message, token limits, and temperature settings.

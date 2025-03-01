@@ -37,6 +37,14 @@ This module integrates Large Language Model (LLM) capabilities into the FastAPI 
 - **Gemini Agent**: This agent integrates with Gemini's API for language processing tasks. It provides similar capabilities to the OpenAI agent but uses Gemini's models.
 - **Dynamic LLM Selection**: This feature allows you to choose between OpenAI and Gemini at runtime, defaulting to Gemini if no provider is specified.
 
+### Available LLM Agents
+
+1. **OpenAI Hello Agent** (`openai_hello.py`): Simple test endpoint for OpenAI integration
+2. **OpenAI Prompt Agent** (`openai_prompt.py`): Advanced prompt endpoint for OpenAI with parameter customization
+3. **Gemini Hello Agent** (`gemini_hello.py`): Simple test endpoint for Gemini integration
+4. **Gemini Prompt Agent** (`gemini_prompt.py`): Advanced prompt endpoint for Gemini with parameter customization
+5. **Agent Hello** (`agent_hello.py`): Dynamic provider selection endpoint that can use either OpenAI or Gemini
+
 ---
 
 ## Project Structure
@@ -53,8 +61,13 @@ llm/
 │   ├─ time.py          # Time agent
 │   ├─ quote.py         # Quote agent
 │   ├─ classifier.py    # Text classification agent
-│   ├─ openai_agent.py  # OpenAI integration
-│   ├─ gemini_agent.py  # Gemini integration
+│   ├─ openai_agent.py  # OpenAI core implementation
+│   ├─ openai_hello.py  # OpenAI hello endpoint
+│   ├─ openai_prompt.py # OpenAI prompt endpoint
+│   ├─ gemini_agent.py  # Gemini core implementation
+│   ├─ gemini_hello.py  # Gemini hello endpoint
+│   ├─ gemini_prompt.py # Gemini prompt endpoint
+│   ├─ agent_hello.py   # Dynamic provider selection
 │   ├─ dspy_integration.py # DSPy integration utilities
 ├─ docs/                # Documentation for this module
 ├─ plans/               # Step by step instructions for AI code writing
@@ -75,8 +88,10 @@ pip install -r requirements.txt
 Create a `.env` file based on the `.env.sample` template and add your API keys:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=your_model_here_or_gpt-4o-mini
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_ENDPOINT=https://api.gemini.example.com/v1/chat/completions
+GEMINI_MODEL=your_model_here_or_gemini-2.0
 ```
 
 3. Run the server:
@@ -104,14 +119,18 @@ Core Endpoints:
 
 LLM Agent Endpoints:
 - OpenAI Hello World: GET /llm/openai-hello?INPUT_TEXT=Hello%20World
+- OpenAI Prompt: POST /llm/openai-prompt
 - Gemini Hello World: GET /llm/gemini-hello?INPUT_TEXT=Hello%20World
-- Dynamic LLM Selection: GET /llm/agent-prompt?INPUT_TEXT=Hello%20World&provider=openai
+- Gemini Prompt: POST /llm/gemini-prompt
+- Dynamic LLM Selection: GET /llm/agent-hello?INPUT_TEXT=Hello%20World&provider=openai
 
 Agent Categories in Swagger UI:
 - **LLM Agents**: Advanced language processing agents
   - OpenAI Hello: GET /llm/openai-hello?INPUT_TEXT=Hello%20World
+  - OpenAI Prompt: POST /llm/openai-prompt
   - Gemini Hello: GET /llm/gemini-hello?INPUT_TEXT=Hello%20World
-  - Agent Prompt: GET /llm/agent-prompt?INPUT_TEXT=Hello%20World&provider=openai
+  - Gemini Prompt: POST /llm/gemini-prompt
+  - Agent Hello: GET /llm/agent-hello?INPUT_TEXT=Hello%20World&provider=openai
 
 - **Simple Agents**: Basic agents without validation
   - Hello World: GET /agent/hello_world
@@ -127,10 +146,20 @@ Agent Categories in Swagger UI:
 Example Usage:
 ```bash
 # Test an endpoint (replace SERVER_URL with your server address)
-curl SERVER_URL/llm/openai-hello
+curl SERVER_URL/llm/openai-hello?INPUT_TEXT=Hello%20World
 
 # Test with parameters
-curl "SERVER_URL/llm/agent-prompt?INPUT_TEXT=Tell%20me%20a%20joke&provider=openai"
+curl "SERVER_URL/llm/agent-hello?INPUT_TEXT=Tell%20me%20a%20joke&provider=openai"
+
+# Test POST endpoint with JSON body
+curl -X POST "SERVER_URL/llm/gemini-prompt" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Tell me a dad joke",
+    "system_message": "You are a comedian who specializes in dad jokes.",
+    "max_tokens": 100,
+    "temperature": 0.7
+  }'
 ```
 
 ## Running Tests

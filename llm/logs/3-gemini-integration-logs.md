@@ -76,10 +76,27 @@
   - Response included estimated token usage statistics
   - Response status was "success"
 
-- Successfully tested GET /agent-prompt endpoint with Gemini provider:
+- Successfully tested GET /agent-hello endpoint with Gemini provider:
   - Sent a request for a dad joke
   - Received the same joke: "Why don't scientists trust atoms? Because they make up everything!"
   - The model used was "gemini-2.0-pro-exp-02-05"
   - Response status was "success"
 
 - All live tests passed successfully, confirming that the Gemini integration is working as expected
+
+## Code Restructuring
+- Reorganized the code to follow a more modular approach:
+  - Split gemini_routes.py into separate files:
+    - gemini_hello.py - Contains only the /gemini-hello endpoint
+    - gemini_prompt.py - Contains only the /gemini-prompt endpoint
+  - Split openai_routes.py into separate files:
+    - openai_hello.py - Contains only the /openai-hello endpoint
+    - openai_prompt.py - Contains only the /openai-prompt endpoint
+  - Created agent_hello.py for the /agent-hello endpoint
+  - Updated routes_llm.py to register all the individual routes
+- Each agent file now follows a consistent pattern:
+  - Class definition with clear documentation
+  - Standalone usage examples
+  - Error handling for API key configuration
+  - Detailed API documentation with input/output examples
+- Updated tests to work with the new structure
