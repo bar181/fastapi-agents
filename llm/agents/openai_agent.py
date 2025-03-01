@@ -1,17 +1,32 @@
 # agents/openai_agent.py
 import os
 from openai import OpenAI
+from typing import Dict, Any
 from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 class OpenAIAgent:
     """
-    Agent for interacting with OpenAI's API using the latest client.
+    OpenAI Agent
+    -----------
+    Purpose: Interact with OpenAI's API to generate text completions.
+
+    Advanced Functionality:
+    - Supports multiple models
+    - Handles both simple and complex prompts
+    - Provides usage statistics
+
+    Usage (standalone - for testing):
+        # In a Python shell:
+        from agents import openai_agent
+        agent = openai_agent.OpenAIAgent()
+        result = agent.test_connection("Hello, how are you?")
+        print(result)
     """
-    
+
     def __init__(self):
+        # Load environment variables
+        load_dotenv()
+        
         self.api_key = os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
@@ -21,10 +36,16 @@ class OpenAIAgent:
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=self.api_key)
-    
-    def test_connection(self, input_text: str):
+
+    def test_connection(self, input_text: str) -> Dict[str, Any]:
         """
         Test the connection to OpenAI API with a simple chat completion request.
+        
+        Args:
+            input_text: The text to send to OpenAI
+            
+        Returns:
+            A dictionary containing the response and status
         """
         try:
             completion = self.client.chat.completions.create(
@@ -47,8 +68,8 @@ class OpenAIAgent:
                 "message": str(e),
                 "model": self.default_model
             }
-    
-    def process_prompt(self, prompt_data):
+
+    def process_prompt(self, prompt_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a prompt with more options using OpenAI's API.
         
