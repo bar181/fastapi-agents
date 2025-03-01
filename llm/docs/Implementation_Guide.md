@@ -5,7 +5,7 @@ Below is an updated plan that focuses solely on LLM agents. Please review and le
 # Implementation Guide for LLM Agents Integration
 
 This plan sets up a new folder in a mono repo dedicated to LLM agents. It confirms proper setup and tests while referencing instructions from **docs/llm-guide.md**. Detailed step-by-step instructions reside in the **/plans** folder, and each completed step is logged in the **/logs** folder with file references and next steps.
-
+- Add error handling and logging **Append to Add logs while implementing the /logs/ files do not delete existing content within these  files **
 ---
 
 ## Folder Structure and Setup

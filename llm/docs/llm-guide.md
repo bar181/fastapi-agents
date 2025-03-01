@@ -1,6 +1,7 @@
-# LLM Integration Guide
+# LLM Integration Guide  **Append to Add logs - do not delete existing content on this file**
 
 This document explains how to integrate LLM (Large Language Model) capabilities into the FastAPI Agent System. We cover two popular LLM providers—OpenAI and Gemini—with core instructions and implementation details for each.
+
 
 ---
 
@@ -21,18 +22,18 @@ This guide covers:
 - **Python 3.9+**
 - Install required packages:
   ```bash
-  pip install openai requests
+  pip install openai google-generativeai requests
   ```
 - Obtain API keys for:
   - **OpenAI:** [OpenAI API](https://openai.com/api/)
-  - **Gemini:** (Refer to your provider’s documentation)
+  - **Gemini:** [Google AI Studio](https://ai.google.dev/)
 
 - Configure your environment (e.g., in a `.env` file):
   ```env
   OPENAI_API_KEY=your_openai_api_key
   OPENAI_MODEL=gpt-4o-mini
   GEMINI_API_KEY=your_gemini_api_key
-  GEMINI_API_URL=https://api.gemini.example.com/v1/chat/completions
+  GEMINI_MODEL=gemini-2.0
   ```
 
 ---
@@ -95,17 +96,35 @@ The implementation includes robust error handling:
 
 ---
 
-## 4. Gemini Integration (Future)
+## 4. Gemini Integration
 
-### Planned Implementation
+### Implementation Details
 
-The Gemini integration will follow a similar pattern to OpenAI, with:
-- GET /gemini-hello endpoint for testing
-- POST /gemini-prompt endpoint for advanced prompts
-- Model validation and error handling
-- Usage statistics reporting
+The Gemini integration provides two endpoints:
 
-### Example Structure
+1. **GET /gemini-hello**
+   - Simple test endpoint
+   - Accepts a query parameter `INPUT_TEXT`
+   - Returns a basic response from the Gemini API
+
+2. **POST /gemini-prompt**
+   - Advanced prompt endpoint
+   - Accepts JSON input with the following fields:
+     - `prompt`: The text prompt to send to Gemini
+     - `system_message`: (optional) System message to set context
+     - `max_tokens`: (optional) Maximum tokens to generate
+     - `temperature`: (optional) Sampling temperature
+     - `model`: (optional) Model to use, defaults to the model in .env or gemini-2.0
+   - Returns the generated response with estimated usage statistics
+
+### Supported Models
+The following models are currently supported:
+- gemini-2.0
+- gemini-pro
+- gemini-pro-vision
+- gemini-ultra
+
+### Example Usage
 
 ```python
 from agents.gemini_agent import GeminiAgent
@@ -120,12 +139,19 @@ print(response)
 # Process a complex prompt
 prompt_data = {
     "prompt": "Explain quantum computing in simple terms",
+    "system_message": "You are a helpful assistant.",
     "max_tokens": 150,
     "temperature": 0.7
 }
 response = agent.process_prompt(prompt_data)
 print(response)
 ```
+
+### Error Handling
+The implementation includes robust error handling:
+- Invalid model names fall back to the default model
+- API errors return detailed error messages
+- Token usage is estimated as Gemini API doesn't provide exact counts
 
 ---
 
@@ -146,4 +172,4 @@ print(response)
 
 ## 6. Conclusion
 
-This guide provides a comprehensive overview of integrating LLM capabilities into your FastAPI Agent System. The OpenAI implementation is complete, and the Gemini integration will follow the same patterns and best practices.
+This guide provides a comprehensive overview of integrating LLM capabilities into your FastAPI Agent System. Both OpenAI and Gemini implementations follow similar patterns and best practices, making it easy to switch between providers or use them together.

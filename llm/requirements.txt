@@ -5,3 +5,4 @@ pytest
 httpx
 openai
 requests
+google-generativeai

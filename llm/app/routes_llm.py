@@ -1,11 +1,15 @@
 # app/routes_llm.py
 from fastapi import APIRouter, Query
 from agents.openai_routes import register_routes as register_openai_routes
+from agents.gemini_routes import register_routes as register_gemini_routes
 
 router = APIRouter(prefix="/llm", tags=["LLM Agents"])
 
 # Register routes for OpenAI agent
 register_openai_routes(router)
+
+# Register routes for Gemini agent
+register_gemini_routes(router)
 
 @router.get("/agent-prompt", summary="Send prompt to selected LLM")
 async def agent_prompt(
