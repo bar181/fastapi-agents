@@ -14,6 +14,7 @@
 - Separated agent implementation and route registration into two files:
   - openai_agent.py - Contains the OpenAIAgent class
   - openai_routes.py - Contains route registration
+- Added model validation using a list of supported models
 
 ## Test Results
 - All OpenAI-related tests are passing successfully:
@@ -21,6 +22,9 @@
   - test_openai_hello_endpoint: PASSED
   - test_openai_prompt_endpoint: PASSED
   - test_agent_prompt_endpoint_openai: PASSED
+- Live testing confirmed both endpoints are working:
+  - GET /openai-hello returns expected response
+  - POST /openai-prompt handles invalid model parameters correctly
 
 ## Implementation Details
 - The OpenAIAgent class now makes actual API calls to OpenAI
@@ -29,6 +33,7 @@
 - Added usage tracking for API calls
 - Resolved all deprecation warnings
 - Followed the single-responsibility principle by separating agent and routes
+- Added model validation against a list of supported models
 
 ## Next Steps
 - Monitor API usage and implement rate limiting if needed

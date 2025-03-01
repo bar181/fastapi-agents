@@ -1,7 +1,7 @@
 # agents/openai_agent.py
 import os
 from openai import OpenAI
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 class OpenAIAgent:
@@ -33,6 +33,13 @@ class OpenAIAgent:
         
         # Get model from environment or use default
         self.default_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        
+        # List of supported models
+        self.supported_models = [
+            "gpt-4o-mini",
+            "gpt-4",
+            "gpt-3.5-turbo"
+        ]
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=self.api_key)
@@ -92,6 +99,10 @@ class OpenAIAgent:
             temperature = prompt_data.get("temperature", 0.7)
             model = prompt_data.get("model", self.default_model)
             
+            # Validate model - use default if invalid
+            if not isinstance(model, str) or model not in self.supported_models:
+                model = self.default_model
+
             # Make API call
             completion = self.client.chat.completions.create(
                 model=model,
@@ -103,19 +114,22 @@ class OpenAIAgent:
                 temperature=temperature
             )
             
+            # Handle usage statistics safely
+            usage = {
+                "prompt_tokens": getattr(completion.usage, "prompt_tokens", 0),
+                "completion_tokens": getattr(completion.usage, "completion_tokens", 0),
+                "total_tokens": getattr(completion.usage, "total_tokens", 0)
+            }
+            
             return {
                 "status": "success",
                 "message": completion.choices[0].message.content,
                 "model": model,
-                "usage": {
-                    "prompt_tokens": completion.usage.prompt_tokens,
-                    "completion_tokens": completion.usage.completion_tokens,
-                    "total_tokens": completion.usage.total_tokens
-                }
+                "usage": usage
             }
         except Exception as e:
             return {
                 "status": "error",
-                "message": str(e),
+                "message": f"Error processing prompt: {str(e)}",
                 "model": model if 'model' in locals() else self.default_model
             }
