@@ -3,3 +3,5 @@ uvicorn
 python-dotenv
 pytest
 httpx
+openai
+requests

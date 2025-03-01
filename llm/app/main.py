@@ -6,14 +6,16 @@ import os
 from agents.dspy_integration import load_agent, run_agent
 from agents.classifier import register_routes as register_classifier_routes
 from agents.quote import register_routes as register_quote_routes            # NEW
+from app.routes_llm import router as llm_router  # Import LLM router
 
-app = FastAPI(title="FastAPI Agent System - Basic Framework - github.com/bar181")
+app = FastAPI(title="FastAPI Agent System - LLM Integration - github.com/bar181")
 
 # --- Agent Information ---
 AGENTS_INFO: List[Dict[str, str]] = [
     {"name": "hello_world", "description": "Returns a simple hello world message."},   
     {"name": "quote", "description": "Returns an inspirational quote."},
     {"name": "classifier", "description": "Classifies input text using rule-based logic."},
+    {"name": "llm", "description": "Integrates with LLM providers like OpenAI and Gemini."},  # Added LLM agent
 ]
 
 @app.get("/agents", tags=["All Agents"])
@@ -26,6 +28,9 @@ register_classifier_routes(agent_router)           # DSPY: Use case for dspy
 
 register_quote_routes(agent_router)                # Simple: Basic agent
 app.include_router(agent_router)
+
+# Include LLM router
+app.include_router(llm_router)
 
 
 # --- Other Routes (hello_world, goodbye, generic) ---
@@ -67,7 +72,7 @@ async def get_favicon():
 
 @app.get("/")
 async def read_root():
-    return {"message": "Welcome to the Agent Base Framework! (https://github.com/bar181/fastapi-agents)"}
+    return {"message": "Welcome to the LLM Agent Framework! (https://github.com/bar181/fastapi-agents)"}
 
 @app.get("/health")
 async def health_check():
