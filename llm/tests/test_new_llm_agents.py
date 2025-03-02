@@ -197,3 +197,46 @@ def test_research_invalid_provider():
         }
     )
     assert response.status_code == 422  # Validation error
+
+# LLM Classifier Tests
+def test_classifier_success():
+    """Test successful text classification."""
+    response = client.post(
+        "/llm/classify",
+        json={
+            "text": "Hi, can you help me find information about climate change?",
+            "provider": "gemini",
+            "system_message": "You are a text classification expert.",
+            "max_tokens": 100,
+            "temperature": 0.7
+        }
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert "initial_classification" in response.json()
+    assert "refined_classification" in response.json()
+    assert "category" in response.json()["initial_classification"]
+    assert "category" in response.json()["refined_classification"]
+    assert "reasoning" in response.json()["refined_classification"]
+
+def test_classifier_empty_text():
+    """Test classifier with empty text."""
+    response = client.post(
+        "/llm/classify",
+        json={
+            "text": "",
+            "provider": "gemini"
+        }
+    )
+    assert response.status_code == 422  # Validation error
+
+def test_classifier_invalid_provider():
+    """Test classifier with invalid provider."""
+    response = client.post(
+        "/llm/classify",
+        json={
+            "text": "Hi, can you help me?",
+            "provider": "invalid-provider"
+        }
+    )
+    assert response.status_code == 422  # Validation error
