@@ -153,3 +153,47 @@ def test_chatbot_invalid_provider():
         }
     )
     assert response.status_code == 422  # Validation error
+
+# Multi-Step Research Agent Tests
+def test_research_success():
+    """Test successful multi-step research."""
+    response = client.post(
+        "/llm/research",
+        json={
+            "query": "Impact of climate change on agriculture",
+            "provider": "gemini",
+            "system_message": "You are a climate science expert.",
+            "max_tokens": 150,
+            "temperature": 0.7
+        }
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert "topics" in response.json()
+    assert "analyses" in response.json()
+    assert "summary" in response.json()
+    assert len(response.json()["topics"]) > 0
+    assert len(response.json()["analyses"]) > 0
+    assert len(response.json()["summary"]) > 0
+
+def test_research_empty_query():
+    """Test research with empty query."""
+    response = client.post(
+        "/llm/research",
+        json={
+            "query": "",
+            "provider": "gemini"
+        }
+    )
+    assert response.status_code == 422  # Validation error
+
+def test_research_invalid_provider():
+    """Test research with invalid provider."""
+    response = client.post(
+        "/llm/research",
+        json={
+            "query": "Impact of climate change on agriculture",
+            "provider": "invalid-provider"
+        }
+    )
+    assert response.status_code == 422  # Validation error
