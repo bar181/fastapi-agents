@@ -1,4 +1,4 @@
-# llm/agents/sentiment_analyzer_agent.py
+# llm/agents/llm_summarization_agent.py
 from typing import Dict, Any, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, field_validator
@@ -10,12 +10,12 @@ class ProviderEnum(str, Enum):
     gemini = "gemini"
     openai = "openai"
 
-class SentimentAnalyzerRequest(BaseModel):
-    text: str = Field(..., description="The text to analyze for sentiment")
+class LlmSummarizationRequest(BaseModel):
+    text: str = Field(..., description="The text to summarize")
     provider: ProviderEnum = Field(ProviderEnum.gemini, description="LLM provider to use (gemini or openai)")
-    system_message: Optional[str] = Field("You are a sentiment analysis expert.", description="System message to set context")
-    max_tokens: Optional[int] = Field(50, description="Maximum tokens to generate")
-    temperature: Optional[float] = Field(0.3, description="Sampling temperature")
+    system_message: Optional[str] = Field("You are a summarization expert.", description="System message to set context")
+    max_tokens: Optional[int] = Field(100, description="Maximum tokens for the summary")
+    temperature: Optional[float] = Field(0.5, description="Sampling temperature")
     
     @field_validator('text')
     def text_must_not_be_empty(cls, v):
@@ -23,11 +23,11 @@ class SentimentAnalyzerRequest(BaseModel):
             raise ValueError('Text cannot be empty')
         return v
 
-class SentimentAnalyzerAgent:
+class LlmSummarizationAgent:
     """
-    Sentiment Analyzer Agent
+    LLM Summarization Agent
     ----------
-    Purpose: Analyze the sentiment of a given text using either Gemini or OpenAI.
+    Purpose: Generate summaries of text using either Gemini or OpenAI.
     """
     AVAILABLE_PROVIDERS = ["gemini", "openai"]
 
@@ -41,19 +41,19 @@ class SentimentAnalyzerAgent:
         else:
             self.agent = GeminiAgent()
 
-    def analyze_sentiment(self, text: str, system_message: str = "You are a sentiment analysis expert.", 
-                         max_tokens: int = 50, temperature: float = 0.3) -> Dict[str, Any]:
+    def summarize(self, text: str, system_message: str = "You are a summarization expert.", 
+                 max_tokens: int = 100, temperature: float = 0.5) -> Dict[str, Any]:
         """
-        Analyze the sentiment of a given text.
+        Generate a summary of the given text.
         
         Args:
-            text: The text to analyze
+            text: The text to summarize
             system_message: System message to set context
-            max_tokens: Maximum tokens to generate
+            max_tokens: Maximum tokens for the summary
             temperature: Sampling temperature
             
         Returns:
-            A dictionary with the sentiment analysis result
+            A dictionary with the summary and metadata
         """
         if not text:
             return {
@@ -62,8 +62,8 @@ class SentimentAnalyzerAgent:
                 "model": "none"
             }
         
-        # Create a prompt for sentiment analysis
-        prompt = f"Analyze the sentiment of the following text and return only one of: positive, negative, or neutral.\n\nText: {text}"
+        # Create a prompt for summarization
+        prompt = f"Summarize the following text in {max_tokens} tokens or less:\n\n{text}"
         
         prompt_data = {
             "prompt": prompt,
@@ -76,20 +76,9 @@ class SentimentAnalyzerAgent:
             result = self.agent.process_prompt(prompt_data)
             
             if result["status"] == "success":
-                # Extract just the sentiment label
-                sentiment = result["message"].strip().lower()
-                # Normalize to one of the three expected values
-                if "positive" in sentiment:
-                    sentiment = "positive"
-                elif "negative" in sentiment:
-                    sentiment = "negative"
-                else:
-                    sentiment = "neutral"
-                
                 return {
                     "status": "success",
-                    "sentiment": sentiment,
-                    "message": result["message"],
+                    "summary": result["message"].strip(),
                     "model": result.get("model", "unknown"),
                     "usage": result.get("usage", {})
                 }
@@ -104,24 +93,24 @@ class SentimentAnalyzerAgent:
 
 def register_routes(router: APIRouter):
     """
-    Register routes for the SentimentAnalyzerAgent.
+    Register routes for the LlmSummarizationAgent.
     """
-    @router.post("/sentiment", summary="Analyze text sentiment using LLM", tags=["Advanced LLM Agents"])
-    async def analyze_sentiment(request: SentimentAnalyzerRequest):
+    @router.post("/summarize", summary="Summarize text using LLM", tags=["Advanced LLM Agents"])
+    async def summarize_text(request: LlmSummarizationRequest):
         """
-        Analyze the sentiment of a given text using the selected LLM provider.
+        Generate a summary of the given text using the selected LLM provider.
         Gemini is the default provider.
         
         **Input:**
 
-        * **text (required, string):** The text to analyze for sentiment
+        * **text (required, string):** The text to summarize
         * **provider (optional, string):** The LLM provider to use (gemini or openai). Default: gemini
         * **system_message (optional, string):** System message to set context
-        * **max_tokens (optional, integer):** Maximum tokens to generate
+        * **max_tokens (optional, integer):** Maximum tokens for the summary
         * **temperature (optional, float):** Sampling temperature
 
         **Process:** Based on the provider parameter, either a `GeminiAgent` or `OpenAIAgent` 
-        is instantiated. The agent analyzes the text and returns a sentiment classification.
+        is instantiated. The agent processes the text and returns a summary.
 
         **Available Providers:**
         * gemini (default)
@@ -131,11 +120,11 @@ def register_routes(router: APIRouter):
 
         ```json
         {
-          "text": "I really enjoyed the movie, it was fantastic!",
+          "text": "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to intelligence displayed by animals including humans. AI research has been defined as the field of study of intelligent agents, which refers to any system that perceives its environment and takes actions that maximize its chance of achieving its goals. The term 'artificial intelligence' had previously been used to describe machines that mimic and display human cognitive skills that are associated with the human mind, such as learning and problem-solving. This definition has since been rejected by major AI researchers who now describe AI in terms of rationality and acting rationally, which does not limit how intelligence can be articulated.",
           "provider": "gemini",
-          "system_message": "You are a sentiment analysis expert.",
-          "max_tokens": 50,
-          "temperature": 0.3
+          "system_message": "You are a summarization expert.",
+          "max_tokens": 100,
+          "temperature": 0.5
         }
         ```
 
@@ -144,13 +133,12 @@ def register_routes(router: APIRouter):
         ```json
         {
           "status": "success",
-          "sentiment": "positive",
-          "message": "positive",
+          "summary": "AI is machine intelligence distinct from human intelligence. Originally defined as machines mimicking human cognitive abilities, AI is now defined by researchers as rational systems that perceive environments and act to achieve goals. This broader definition doesn't limit how intelligence can be expressed.",
           "model": "gemini-2.0",
           "usage": {
-            "prompt_tokens": 25,
-            "completion_tokens": 1,
-            "total_tokens": 26,
+            "prompt_tokens": 150,
+            "completion_tokens": 45,
+            "total_tokens": 195,
             "note": "Token counts are estimates as Gemini API doesn't provide exact usage"
           }
         }
@@ -161,13 +149,12 @@ def register_routes(router: APIRouter):
         ```json
         {
           "status": "success",
-          "sentiment": "positive",
-          "message": "positive",
+          "summary": "AI is machine intelligence distinct from human intelligence. Originally defined as machines mimicking human cognitive abilities, AI is now defined by researchers as rational systems that perceive environments and act to achieve goals. This broader definition doesn't limit how intelligence can be expressed.",
           "model": "gpt-4o-mini",
           "usage": {
-            "prompt_tokens": 25,
-            "completion_tokens": 1,
-            "total_tokens": 26
+            "prompt_tokens": 150,
+            "completion_tokens": 45,
+            "total_tokens": 195
           }
         }
         ```
@@ -193,8 +180,8 @@ def register_routes(router: APIRouter):
         ```
         """
         try:
-            agent = SentimentAnalyzerAgent(provider=request.provider)
-            result = agent.analyze_sentiment(
+            agent = LlmSummarizationAgent(provider=request.provider)
+            result = agent.summarize(
                 text=request.text,
                 system_message=request.system_message,
                 max_tokens=request.max_tokens,

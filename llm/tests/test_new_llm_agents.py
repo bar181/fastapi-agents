@@ -10,7 +10,13 @@ def test_sentiment_analyzer_positive():
     """Test positive sentiment analysis."""
     response = client.post(
         "/llm/sentiment",
-        json={"text": "I love this product! It's amazing!", "model": "gpt-4o-mini"}
+        json={
+            "text": "I love this product! It's amazing!",
+            "provider": "openai",
+            "system_message": "You are a sentiment analysis expert.",
+            "max_tokens": 50,
+            "temperature": 0.3
+        }
     )
     assert response.status_code == 200
     assert response.json()["status"] == "success"
@@ -20,7 +26,13 @@ def test_sentiment_analyzer_negative():
     """Test negative sentiment analysis."""
     response = client.post(
         "/llm/sentiment",
-        json={"text": "I hate this product! It's terrible!", "model": "gpt-4o-mini"}
+        json={
+            "text": "I hate this product! It's terrible!",
+            "provider": "openai",
+            "system_message": "You are a sentiment analysis expert.",
+            "max_tokens": 50,
+            "temperature": 0.3
+        }
     )
     assert response.status_code == 200
     assert response.json()["status"] == "success"
@@ -30,7 +42,13 @@ def test_sentiment_analyzer_neutral():
     """Test neutral sentiment analysis."""
     response = client.post(
         "/llm/sentiment",
-        json={"text": "This is a product.", "model": "gpt-4o-mini"}
+        json={
+            "text": "This is a product.",
+            "provider": "openai",
+            "system_message": "You are a sentiment analysis expert.",
+            "max_tokens": 50,
+            "temperature": 0.3
+        }
     )
     assert response.status_code == 200
     assert response.json()["status"] == "success"
@@ -40,10 +58,20 @@ def test_sentiment_analyzer_error():
     """Test error handling in sentiment analysis."""
     response = client.post(
         "/llm/sentiment",
-        json={"text": "", "model": "invalid-model"}
+        json={"text": ""}
     )
-    assert response.status_code == 200
-    assert response.json()["status"] == "error"
+    assert response.status_code == 422  # Validation error
+
+def test_sentiment_analyzer_invalid_provider():
+    """Test sentiment analysis with invalid provider."""
+    response = client.post(
+        "/llm/sentiment",
+        json={
+            "text": "This is a test.",
+            "provider": "invalid-provider"
+        }
+    )
+    assert response.status_code == 422  # Validation error
 
 # Summarization Tests
 def test_summarization_success():
@@ -51,7 +79,13 @@ def test_summarization_success():
     text = "The quick brown fox jumps over the lazy dog. This is a test sentence for summarization."
     response = client.post(
         "/llm/summarize",
-        json={"text": text, "model": "gpt-4o-mini", "max_tokens": 20}
+        json={
+            "text": text,
+            "provider": "openai",
+            "system_message": "You are a summarization expert.",
+            "max_tokens": 20,
+            "temperature": 0.5
+        }
     )
     assert response.status_code == 200
     assert response.json()["status"] == "success"
@@ -62,20 +96,21 @@ def test_summarization_empty_text():
     """Test summarization with empty text."""
     response = client.post(
         "/llm/summarize",
-        json={"text": "", "model": "gpt-4o-mini"}
+        json={"text": ""}
     )
-    assert response.status_code == 200
-    assert response.json()["status"] == "error"
+    assert response.status_code == 422  # Validation error
 
-def test_summarization_invalid_model():
-    """Test summarization with invalid model."""
+def test_summarization_invalid_provider():
+    """Test summarization with invalid provider."""
     text = "This is a test sentence for summarization."
     response = client.post(
         "/llm/summarize",
-        json={"text": text, "model": "invalid-model"}
+        json={
+            "text": text,
+            "provider": "invalid-provider"
+        }
     )
-    assert response.status_code == 200
-    assert response.json()["status"] == "error"
+    assert response.status_code == 422  # Validation error
 
 # Multi-Step Chatbot Tests
 def test_chatbot_success():

@@ -8,7 +8,7 @@ from agents.provider_hello import register_routes as register_provider_hello
 from agents.provider_prompt import register_routes as register_provider_prompt
 from agents.sentiment_analyzer_agent import register_routes as register_sentiment_analyzer
 from agents.question_answering import register_routes as register_question_answering
-from agents.summarization_agent import register_routes as register_summarization
+from agents.llm_summarization_agent import register_routes as register_summarization
 from agents.chatbot import register_routes as register_chatbot
 
 # Create router without tags to avoid duplicate tags in Swagger
