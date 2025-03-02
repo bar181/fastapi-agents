@@ -76,3 +76,45 @@ def test_summarization_invalid_model():
     )
     assert response.status_code == 200
     assert response.json()["status"] == "error"
+
+# Multi-Step Chatbot Tests
+def test_chatbot_success():
+    """Test successful multi-step chatbot conversation."""
+    response = client.post(
+        "/llm/chatbot",
+        json={
+            "message": "I need help with my account",
+            "provider": "gemini",
+            "system_message": "You are a customer service representative.",
+            "max_tokens": 150,
+            "temperature": 0.7
+        }
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert "clarification" in response.json()
+    assert "final_response" in response.json()
+    assert len(response.json()["clarification"]) > 0
+    assert len(response.json()["final_response"]) > 0
+
+def test_chatbot_empty_message():
+    """Test chatbot with empty message."""
+    response = client.post(
+        "/llm/chatbot",
+        json={
+            "message": "",
+            "provider": "gemini"
+        }
+    )
+    assert response.status_code == 422  # Validation error
+
+def test_chatbot_invalid_provider():
+    """Test chatbot with invalid provider."""
+    response = client.post(
+        "/llm/chatbot",
+        json={
+            "message": "I need help with my account",
+            "provider": "invalid-provider"
+        }
+    )
+    assert response.status_code == 422  # Validation error

@@ -37,6 +37,10 @@ Based on our successful Gemini integration and provider-based endpoints, we'll f
 5. **Response Format**: Maintain consistent response format across all agents
 6. **Token Usage**: Include token usage statistics in responses (estimated for Gemini)
 7. **Provider Validation**: Validate provider against a list of available providers
+8. **Swagger Tag and Labels**: Each agent should be listed in the Swagger as "Advanced LLM Agents" with detailed instructions (see existing LLM agent POST /llm/provider-prompt for level of detail and struture)
+9. **Single File Agents**: All agent details including the swagger details should be in one file - do nto have a separate file for the route details (see LLM agent POST /llm/provider-prompt for structure)
+10. **only build these agents**: Build the 5 agents outlined and use a test file for these agents.  Other tests should be left alone
+9. **Update logs after created**: Update the /logs/4-logs.md after each agent is in working order - include any issues and solutions.  If you are stuck on an agent issue or question about structure reference this document and the logs document for support
 
 ---
 
