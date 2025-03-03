@@ -3,9 +3,10 @@
 This module integrates Large Language Model (LLM) capabilities into the FastAPI Agent System. It supports multiple LLM providers, including OpenAI and Gemini, allowing for dynamic text generation, summarization, and other language tasks.
 
 1. **LLM Agents**: Advanced language processing agents leveraging OpenAI and Gemini
-2. **Simple Agents**: Basic agents that return simple responses without validation
-3. **Agents with Validation**: Agents that require validation (like token verification)
-4. **Dynamic Agents**: Agents that are loaded dynamically at runtime
+2. **Advanced LLM Agents**: Sophisticated multi-step agents with specialized capabilities
+3. **Simple Agents**: Basic agents that return simple responses without validation
+4. **Agents with Validation**: Agents that require validation (like token verification)
+5. **Dynamic Agents**: Agents that are loaded dynamically at runtime
 
 ---
 
@@ -15,6 +16,15 @@ This module integrates Large Language Model (LLM) capabilities into the FastAPI 
    - **OpenAI Integration:** Connect to OpenAI's powerful language models for text generation, summarization, and more.
    - **Gemini Integration:** Leverage Gemini's language capabilities for various NLP tasks.
    - **Dynamic Provider Selection:** Choose between OpenAI and Gemini at runtime for each request.
+
+✅ **Advanced Multi-Step LLM Agents**
+   - **Sentiment Analysis:** Analyze text sentiment as positive, negative, or neutral.
+   - **Text Summarization:** Generate concise summaries of longer texts.
+   - **Question Answering:** Get direct answers to specific questions.
+   - **Multi-Turn Chatbot:** Engage in context-aware conversations with clarification steps.
+   - **Research Analysis:** Conduct comprehensive research with topic extraction and analysis.
+   - **Text Classification:** Combine rule-based and LLM approaches for robust classification.
+   - **Research Analyzer:** Extract entities, questions, timelines, and perspectives from research queries.
 
 ✅ **Simple Utility Agents**
    - **Hello World**: Returns a simple greeting.
@@ -46,6 +56,36 @@ This module integrates Large Language Model (LLM) capabilities into the FastAPI 
 5. **Provider Hello Agent** (`provider_hello.py`): Dynamic provider selection endpoint for simple testing
 6. **Provider Prompt Agent** (`provider_prompt.py`): Dynamic provider selection endpoint with advanced parameter customization
 
+### Advanced LLM Agents
+
+1. **Sentiment Analyzer Agent** (`sentiment_analyzer_agent.py`): Analyzes the sentiment of text as positive, negative, or neutral
+   - Endpoint: POST `/llm/sentiment`
+   - Features: Provider selection (Gemini/OpenAI), Pydantic validation, comprehensive error handling
+
+2. **LLM Summarization Agent** (`llm_summarization_agent.py`): Summarizes long text into concise summaries
+   - Endpoint: POST `/llm/summarize`
+   - Features: Provider selection (Gemini/OpenAI), Pydantic validation, max_tokens control
+
+3. **Question Answering Agent** (`question_answering.py`): Answers questions using either Gemini or OpenAI
+   - Endpoint: POST `/llm/question-answering`
+   - Features: Provider selection, system message customization
+
+4. **Multi-Step Chatbot Agent** (`chatbot.py`): Engages in multi-turn conversations for context-aware responses
+   - Endpoint: POST `/llm/chatbot`
+   - Features: Two-step conversation flow, provider selection, Pydantic validation
+
+5. **Research Agent** (`research_agent.py`): Conducts multi-step research by extracting topics, analyzing each, and aggregating results
+   - Endpoint: POST `/llm/research`
+   - Features: Three-step research process, provider selection, Pydantic validation
+
+6. **LLM Classifier Agent** (`llm_classifier.py`): Combines rule-based classification with LLM refinement
+   - Endpoint: POST `/llm/classify`
+   - Features: Two-step classification process (rule-based + LLM refinement), dspy-inspired patterns
+
+7. **Research Analyzer Agent** (`research_analyzer.py`): Extracts key elements using dspy-inspired patterns and provides comprehensive analyses
+   - Endpoint: POST `/llm/research-analyze`
+   - Features: Five-step research analysis process, provider selection, Pydantic validation, JSON extraction
+
 ---
 
 ## Project Structure
@@ -70,6 +110,13 @@ llm/
 │   ├─ gemini_prompt.py # Gemini prompt endpoint
 │   ├─ provider_hello.py # Provider selection hello endpoint
 │   ├─ provider_prompt.py # Provider selection prompt endpoint
+│   ├─ sentiment_analyzer_agent.py # Sentiment analysis agent
+│   ├─ llm_summarization_agent.py # Text summarization agent
+│   ├─ question_answering.py # Question answering agent
+│   ├─ chatbot.py # Multi-step chatbot agent
+│   ├─ research_agent.py # Multi-step research agent
+│   ├─ llm_classifier.py # LLM-enhanced classifier agent
+│   ├─ research_analyzer.py # Multi-step research analyzer agent
 │   ├─ dspy_integration.py # DSPy integration utilities
 ├─ docs/                # Documentation for this module
 ├─ plans/               # Step by step instructions for AI code writing
@@ -127,14 +174,32 @@ LLM Agent Endpoints:
 - Provider Hello: GET /llm/provider-hello?INPUT_TEXT=Hello%20World&provider=openai
 - Provider Prompt: POST /llm/provider-prompt
 
+Advanced LLM Agent Endpoints:
+- Sentiment Analysis: POST /llm/sentiment
+- Text Summarization: POST /llm/summarize
+- Question Answering: POST /llm/question-answering
+- Multi-Step Chatbot: POST /llm/chatbot
+- Research Agent: POST /llm/research
+- LLM Classifier: POST /llm/classify
+- Research Analyzer: POST /llm/research-analyze
+
 Agent Categories in Swagger UI:
-- **LLM Agents**: Advanced language processing agents
+- **LLM Agents**: Basic language processing agents
   - OpenAI Hello: GET /llm/openai-hello?INPUT_TEXT=Hello%20World
   - OpenAI Prompt: POST /llm/openai-prompt
   - Gemini Hello: GET /llm/gemini-hello?INPUT_TEXT=Hello%20World
   - Gemini Prompt: POST /llm/gemini-prompt
   - Provider Hello: GET /llm/provider-hello?INPUT_TEXT=Hello%20World&provider=openai
   - Provider Prompt: POST /llm/provider-prompt
+
+- **Advanced LLM Agents**: Sophisticated multi-step agents
+  - Sentiment Analysis: POST /llm/sentiment
+  - Text Summarization: POST /llm/summarize
+  - Question Answering: POST /llm/question-answering
+  - Multi-Step Chatbot: POST /llm/chatbot
+  - Research Agent: POST /llm/research
+  - LLM Classifier: POST /llm/classify
+  - Research Analyzer: POST /llm/research-analyze
 
 - **Simple Agents**: Basic agents without validation
   - Hello World: GET /agent/hello_world
@@ -163,6 +228,28 @@ curl -X POST "SERVER_URL/llm/provider-prompt" \
     "provider": "gemini",
     "system_message": "You are a comedian who specializes in dad jokes.",
     "max_tokens": 100,
+    "temperature": 0.7
+  }'
+
+# Test sentiment analysis endpoint
+curl -X POST "SERVER_URL/llm/sentiment" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "I love this product! It is amazing!",
+    "provider": "gemini",
+    "system_message": "You are a sentiment analysis expert.",
+    "max_tokens": 50,
+    "temperature": 0.3
+  }'
+
+# Test research analyzer endpoint
+curl -X POST "SERVER_URL/llm/research-analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Impact of artificial intelligence on healthcare",
+    "provider": "gemini",
+    "system_message": "You are a research analysis expert.",
+    "max_tokens": 300,
     "temperature": 0.7
   }'
 ```
