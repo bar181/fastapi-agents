@@ -180,13 +180,15 @@ Our development process followed a rigorous Documentation First approach:
 ## Original Gist
 https://gist.github.com/bar181/7fc0286841a38c72848ed037d0e561fd
 ### Author: Bradley Ross (bar181 on gists and github)
+https://www.linkedin.com/in/bradaross/
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. You are not obligated, acknowledging the author is appreciated. 
 
 ## SCC Report (/llm complete)
-LOC 19039
+Commits: 54
+Elapsed days: 4
+LOC: 19039
 Estimated Cost to Develop (organic) $442,527
 Estimated Schedule Effort (organic) 10.09 months
 Estimated People Required (organic) 3.90
