@@ -47,10 +47,29 @@ Advanced agents leveraging DSPy for complex text processing tasks. This module i
 - Comprehensive test suite (30 tests)
 - No `.env` file required for setup
 
+### `/mcp`
+Specialized agents that implement the Module Context Protocol (MCP) for enhanced context sharing and state management between agents. MCP enables agents to maintain context across multiple interactions and coordinate with each other for complex tasks. This module includes:
+- MCP adapter for context sharing between agents
+- Calculator agent for arithmetic expression evaluation
+- Multi-step reasoning agent for iterative hypothesis refinement
+- Workflow coordinator agent for sub-agent orchestration
+- Workflow decisioning agent for task-based agent selection
+- Comprehensive test suite with mocking and error handling
+- Requires `.env` file with MCP configuration
+
+### `/llm`
+Advanced language processing agents leveraging OpenAI and Gemini for sophisticated text generation and analysis. This module includes:
+- OpenAI and Gemini integration for advanced language capabilities
+- Dynamic provider selection between different LLM providers
+- Basic LLM agents for simple text generation
+- Advanced LLM agents for sentiment analysis, summarization, question answering, and more
+- Multi-step agents for complex tasks like research and analysis
+- Comprehensive test suite for all agent types
+- Requires `.env` file with API keys for LLM providers
+
 ### Planned Future Modules
 This repository is actively expanding and in development with the following planned modules:
 
-- **LLM Agents**: Will provide integration with various Large Language Models for more sophisticated reasoning and natural language understanding capabilities.
 - **MIPROv2 Agents**: Will implement the MIPROv2 framework for multi-step reasoning and planning in complex environments.
 - **Meta Dynamic Agents**: Will implement agents that are created based on a knowledge graph format.
 - **Supabase Agents**: Will implement the dynamically generated agents based on descriptions from a database.
@@ -75,7 +94,8 @@ fastapi-agents/
 ├─ base-framework/   # Core framework with minimal agents
 ├─ starter/          # Simple agents with basic functionality
 ├─ dspy/             # Advanced agents with DSPy integration
-├─ (future) llm/     # Agents leveraging various LLMs
+├─ mcp/              # Agents with Module Context Protocol for context sharing
+├─ llm/              # Agents leveraging various LLMs (OpenAI, Gemini)
 ├─ (future) miprov2/ # Agents using MIPROv2 framework
 └─ README.md         # Main documentation
 ```
@@ -90,7 +110,7 @@ cd fastapi-agents
 
 2. Choose a module and navigate to its directory:
 ```bash
-cd dspy  # or starter or base-framework
+cd dspy  # or starter, base-framework, mcp, llm
 ```
 
 3. Install dependencies:
