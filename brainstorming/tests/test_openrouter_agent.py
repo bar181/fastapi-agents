@@ -1,4 +1,3 @@
-# tests/test_openrouter_agent.py
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app

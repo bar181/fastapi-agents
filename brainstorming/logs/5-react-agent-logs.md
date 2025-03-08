@@ -10,11 +10,13 @@ The agent structure has been set up in `brainstorming/agents/ruv_react_decision_
   - FastAPI
   - Requests
   - OpenRouter API
+  - Gemini API
 
 - **Key Components**:
   - `ChatMessage` class for representing messages in the conversation
   - `Tool` class for representing tools that the agent can use
   - `Agent` class for implementing the reasoning capabilities
+  - `call_gemini` function for interacting with the Gemini API
   - `call_openrouter` function for interacting with the OpenRouter API
   - `run_agent` function for executing the ReAct loop
   - FastAPI endpoints for handling requests
@@ -62,6 +64,26 @@ Created tests for the OpenRouter agent and the RUV ReAct Decision Engine agent:
   - Test inductive reasoning for financial, medical, and legal domains
   - Test the calculator tool
   - Test handling of invalid queries and domains
+
+## Step 6: Update .env.sample - Completed
+
+Updated the `.env.sample` file to include the OpenRouter API key and model. This ensures that users know what environment variables are required for the OpenRouter agent and the RUV ReAct Decision Engine agent.
+
+- **Changes**:
+  - Added `OPENROUTER_API_KEY` environment variable
+  - Added `OPENROUTER_MODEL` environment variable with default value `openai/o3-mini-high`
+  - Added `GEMINI_API_KEY` environment variable
+  - Added `GEMINI_ENDPOINT` environment variable with default value `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+  - Added `GEMINI_MODEL` environment variable with default value `gemini-pro`
+
+## Step 7: Update RUV ReAct Agent to use Gemini by default - Completed
+
+Updated the `ruv_react_decision_engine.py` file to use Gemini by default and fall back to OpenRouter if the Gemini API key is not available.
+
+- **Changes**:
+  - Modified the `run_agent` function to use Gemini by default and fall back to OpenRouter if the Gemini API key is not available.
+  - Added error handling to the `call_gemini` and `call_openrouter` functions to handle the case where the API key is not available.
+  - Updated the tests to reflect these changes.
 
 ## Next Steps
 

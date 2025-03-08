@@ -5,11 +5,15 @@ import requests
 
 app = FastAPI()
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-MODEL = os.getenv("OPENROUTER_MODEL", "openai/o3-mini-high")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_ENDPOINT = os.getenv("GEMINI_ENDPOINT", "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-pro")
 
-if not OPENROUTER_API_KEY:
-    raise ValueError("Missing OPENROUTER_API_KEY in environment.")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/o3-mini-high")
+
+if not GEMINI_API_KEY and not OPENROUTER_API_KEY:
+    raise ValueError("Missing GEMINI_API_KEY or OPENROUTER_API_KEY in environment.")
 
 # Interfaces/structures in Python
 class ChatMessage:
@@ -231,31 +235,74 @@ class Agent:
             return {"result": ded, "reasoningUsed": "deductive"}
         ind = self.apply_inductive(domain, user_input)
         return {"result": ind, "reasoningUsed": "inductive"}
+# LLM interaction via Gemini
+def call_gemini(messages: list[ChatMessage]) -> str:
+    if not GEMINI_API_KEY:
+        return "Gemini API key not configured."
+    try:
+        url = GEMINI_ENDPOINT + f"?key={GEMINI_API_KEY}"
+        contents = [{"role": m.role, "parts": [{"text": m.content}]} for m in messages]
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.0,
+                "topP": 1,
+                "topK": 32,
+                "maxOutputTokens": 2048,
+            },
+            "safetySettings": [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                {"category": "SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                {"category": "DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            ],
+        }
+        headers = {"Content-Type": "application/json"}
+
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            return f"Gemini API error: {resp.status_code} - {resp.text}"
+
+        data = resp.json()
+        candidates = data.get("candidates", [])
+        if not candidates:
+            return "Gemini API returned no candidates."
+
+        content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        if not isinstance(content, str):
+            return "Gemini API response missing or invalid content."
+
+        return content
+    except Exception as e:
+        return f"Gemini API error: {e}"
 
 # LLM interaction via OpenRouter
 def call_openrouter(messages: list[ChatMessage]) -> str:
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    payload = {
-        "model": MODEL,
-        "messages": [{"role": m.role, "content": m.content} for m in messages],
-        "stop": ["Observation:"],
-        "temperature": 0.0,
-    }
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-    }
+    if not OPENROUTER_API_KEY:
+        return "OpenRouter API key not configured."
+    try:
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        payload = {
+            "model": OPENROUTER_MODEL,
+            "messages": [{"role": m.role, "content": m.content} for m in messages],
+            "stop": ["Observation:"],
+            "temperature": 0.0,
+        }
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+        }
 
-    resp = requests.post(url, json=payload, headers=headers, timeout=30)
-    if resp.status_code != 200:
-        raise ValueError(
-            f"OpenRouter API error: {resp.status_code} - {resp.text}"
-        )
-    data = resp.json()
-    content = data.get("choices", [{}])[0].get("message", {}).get("content")
-    if not isinstance(content, str):
-        raise ValueError("LLM response missing or invalid.")
-    return content
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            return f"OpenRouter API error: {resp.status_code} - {resp.text}"
+        data = resp.json()
+        content = data.get("choices", [{}])[0].get("message", {}).get("content")
+        if not isinstance(content, str):
+            return "LLM response missing or invalid."
+        return content
+    except Exception as e:
+        return f"OpenRouter API error: {e}"
 
 async def run_agent(query: str) -> str:
     messages = [
@@ -284,7 +331,12 @@ async def run_agent(query: str) -> str:
 
     # ReAct loop
     for _ in range(10):
-        assistant_reply = call_openrouter(messages)
+        if GEMINI_API_KEY:
+            assistant_reply = call_gemini(messages)
+        elif OPENROUTER_API_KEY:
+            assistant_reply = call_openrouter(messages)
+        else:
+            return "No API key configured."
         # Must be sync call inside async - in real usage, you'd use an async library or thread
         # For demonstration, it's simpler to keep it sync in this example
 
@@ -327,37 +379,3 @@ async def run_agent(query: str) -> str:
         return reply.strip()
 
     raise ValueError("No final answer produced within step limit.")
-
-@app.get("/")
-def read_root():
-    return {
-        "message": "Agentic ReAct Agent in FastAPI!",
-        "usage": "POST JSON to '/' with { 'query': 'your question' }",
-    }
-
-@app.post("/")
-async def handle_query(request: Request):
-    try:
-        body = await request.json()
-    except:
-        return Response("Invalid JSON body", status_code=400)
-
-    query = body.get("query") or body.get("question")
-    if not query or not isinstance(query, str):
-        return Response(
-            'Missing "query" string in request body.',
-            status_code=400
-        )
-
-    try:
-        answer = await run_agent(query)
-        return {"answer": answer}
-    except Exception as exc:
-        return Response(
-            f'Error: {str(exc)}',
-            status_code=500
-        )
-
-# If running locally:
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
