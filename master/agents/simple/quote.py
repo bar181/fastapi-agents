@@ -1,5 +1,6 @@
-# agents/quote.py
+# agents/simple/quote.py
 import random
+
 
 # Collection of inspirational quotes
 QUOTES = [

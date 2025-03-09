@@ -2,6 +2,7 @@
 from typing import Dict, Any
 from fastapi import APIRouter
 from datetime import datetime, UTC 
+router = APIRouter()
 
 class TimeAgent:
     """

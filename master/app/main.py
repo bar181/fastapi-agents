@@ -1,65 +1,19 @@
-# main.py
-from fastapi import FastAPI, HTTPException, Request, APIRouter
+# master/app/main.py
+from fastapi import FastAPI, APIRouter
 from fastapi.responses import JSONResponse, Response
-from typing import Optional, List, Dict, Any
-import os
-from agents.dspy_integration import load_agent, run_agent
-from agents.classifier import register_routes as register_classifier_routes
-from agents.quote import register_routes as register_quote_routes            # NEW
-from app.routes_llm import router as llm_router  # Import LLM router
+from app.routes.routes_llm import router as llm_router
+from app.routes.routes_simple import router as simple_router
+# from app.routes.routes_dynamic import router as dynamic_router
+# from app.routes.routes_validation import router as validation_router
+# from app.routes.routes_miprov2_core import router as miprov2_core_router
+# from app.routes.routes_classification import router as classification_router  # REMOVED
+from app.routes.routes_dspy import router as dspy_router 
 
-app = FastAPI(title="FastAPI Agent System - LLM Integration - github.com/bar181")
+app = FastAPI(title="Agent Framework - Master Module")
 
-# --- Agent Information ---
-AGENTS_INFO: List[Dict[str, str]] = [
-    {"name": "hello_world", "description": "Returns a simple hello world message."},   
-    {"name": "quote", "description": "Returns an inspirational quote."},
-    {"name": "classifier", "description": "Classifies input text using rule-based logic."},
-    {"name": "llm", "description": "Integrates with LLM providers like OpenAI and Gemini."},  # Added LLM agent
-]
-
-@app.get("/agents", tags=["All Agents"])
-async def list_all_agents() -> Dict[str, List[Dict[str, str]]]:
-    return {"agents": AGENTS_INFO}
-
-# --- Agent Router ---
-agent_router = APIRouter(prefix="/agent")
-register_classifier_routes(agent_router)           # DSPY: Use case for dspy 
-
-register_quote_routes(agent_router)                # Simple: Basic agent
-app.include_router(agent_router)
-
-# Include LLM router
-app.include_router(llm_router)
-
-
-# --- Other Routes (hello_world, goodbye, generic) ---
-
-# dymanic agent generation using dspy
-@app.get("/agent/{agent_name}", tags=["Dynamic Agents"]) 
-async def execute_agent(agent_name: str, request: Request):
-    agent_file = os.path.join("agents", f"{agent_name}.py")
-    if not os.path.exists(agent_file):
-        raise HTTPException(status_code=404, detail="Agent not found.")
-
-    try:
-        agent_module = load_agent(agent_file)
-
-        if hasattr(agent_module, 'TOKEN') and 'token' in request.query_params:
-            agent_module.TOKEN = request.query_params['token']
-        if hasattr(agent_module, 'EXPRESSION') and 'expression' in request.query_params:
-            agent_module.EXPRESSION = request.query_params['expression']
-        if hasattr(agent_module, 'INPUT_TEXT') and 'INPUT_TEXT' in request.query_params:
-            agent_module.INPUT_TEXT = request.query_params['INPUT_TEXT']
-        if hasattr(agent_module, 'TEXT_TO_SUMMARIZE') and 'TEXT_TO_SUMMARIZE' in request.query_params:
-            agent_module.TEXT_TO_SUMMARIZE = request.query_params['TEXT_TO_SUMMARIZE']
-
-        output = run_agent(agent_module)
-        return {"agent": agent_name, "result": output}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error executing agent: {str(e)}")
-
-
+@app.get("/health")
+async def health_check():
+    return JSONResponse({"status": "ok", "message": "Healthy"})
 
 @app.get("/favicon.ico")
 async def get_favicon():
@@ -70,10 +24,11 @@ async def get_favicon():
     </svg>'''
     return Response(content=svg.encode('utf-8'), media_type="image/svg+xml")
 
-@app.get("/")
-async def read_root():
-    return {"message": "Welcome to the LLM Agent Framework! (https://github.com/bar181/fastapi-agents)"}
-
-@app.get("/health")
-async def health_check():
-    return JSONResponse({"status": "ok", "message": "Healthy"})
+# Include routers
+app.include_router(llm_router, prefix="/llm")
+app.include_router(simple_router, prefix="/simple")
+# app.include_router(dynamic_router, prefix="/dynamic")
+# app.include_router(validation_router, prefix="/validation")
+# app.include_router(miprov2_core_router, prefix="/miprov2")
+# app.include_router(classification_router, prefix="/classification")  # REMOVED
+app.include_router(dspy_router, prefix="/dspy")
